@@ -28,6 +28,8 @@ from apps import create_app, db
 from apps.salesfc.inference import Inference
 import apps.salesfc.config as config
 
+# from apps.streaming import example as str_ex
+
 from apps.analytics import quicksight_embed as qe
 from apps.analytics import bedrock_rag as rag
 from apps.analytics import bedrock_rag_enhanced as re
@@ -219,6 +221,17 @@ def start_salesfc(): #realm, site, future_preds, start_date):
         session["notification_5"]= list(notifications.values())[4]
 
     return render_template('pages/sample-page.html' ) 
+
+
+@app.route("/start_streaming", methods=['GET'])
+def start_streaming(): 
+
+    print("streaming route started")
+    # str_ex.main() # just stream
+    import subprocess
+    subprocess.run(["python", "apps/streaming/cost-control-streaming.py"]) # *check* run in background
+
+    return render_template('pages/streaming.html')
 
 
 @app.route("/analytics", methods=['GET'])

@@ -3,7 +3,7 @@ import mysql.connector
 import pandas as pd
 from apps.analytics import lollipop_policy as lp
 from apps.analytics import create_sql_prompt as pol
-import openai
+from openai import OpenAI
 
 def main(input: str,
      **kwargs
@@ -21,7 +21,7 @@ def nlp2sql(
      **kwargs
 ):
 
-    openai.api_key = os.getenv("")
+    openai_client = OpenAI(api_key=os.getenv('CE_OPENAI_API_KEY'))
 
     local_host = os.getenv("RDS_HOST")
     local_user = os.getenv("RDS_USER")
@@ -52,7 +52,7 @@ def nlp2sql(
         }
         ]
 
-    response = openai.chat.completions.create(
+    response = openai_client.chat.completions.create(
             model = "gpt-3.5-turbo",
             messages = converted_message,
             temperature = 0.3,
