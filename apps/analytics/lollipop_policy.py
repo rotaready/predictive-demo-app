@@ -1,10 +1,10 @@
 import os
 
-import openai
+from openai import OpenAI
 
 def main(prompt: str):
 
-  openai.api_key = os.getenv("OPENAI_API_KEY")
+  openai_client = OpenAI(api_key=os.getenv('CE_OPENAI_API_KEY'))
 
   # examples:
   # prompt = "hello"
@@ -58,7 +58,7 @@ def main(prompt: str):
       # },
     ]
 
-  response = openai.chat.completions.create(
+  response = openai_client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=lollipop_policy,                                                                                                                                            
     temperature=0.5,
