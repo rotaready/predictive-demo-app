@@ -1,0 +1,114 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Run Sales Forecast 
+
+<!DOCTYPE html>
+<html lang="en">
+  <!-- <head>
+    <title>Run Sales Forecast</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script> sessOutput = "{{sessOutput}}"</script>
+  </head> -->
+
+{% endblock title %}
+
+{% block content %}
+  <!-- [ Main Content ] start -->
+
+
+  <head>
+    <title>Streaming Demo</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  </head>
+
+  <body>
+
+    <script>  
+    // if window reloaded, add delayed sales forecast completion message
+    if (window.performance) {
+      console.info("window.performance works fine on this browser");
+    }
+    console.info(performance.navigation.type);
+
+    </script>
+
+  <body>
+
+  
+  <div class="pc-container">
+    <div class="pc-content">
+      <!-- [ breadcrumb ] start -->
+      <div class="page-header">
+        <div class="page-block">
+          <div class="row align-items-center">
+            <div class="col-md-12">
+              <div class="page-header-title">
+                <h5 class="m-b-10">Streaming Demo</h5>
+              </div>
+              <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- [ breadcrumb ] end -->
+
+
+      <!-- [ Main Content ] start -->
+      <div class="row">
+        <!-- [ sample-page ] start -->
+        <div class="col-sm-12">
+          <div class="card">
+
+            <button type="submit" id="stream_start" class="btn large-modal" style="background-color:#d4e7f9; color: #111936; width:150px; margin-left: 10px; margin-top: 10px;">Stream Data</button>
+
+            <div class="card-body">
+              
+            </div>
+
+          </div>
+        </div>
+        <!-- [ sample-page ] end -->
+      </div>
+      <!-- [ Main Content ] end -->
+    </div>
+  </div>
+
+  
+
+
+
+  
+
+
+  <script>
+
+
+
+    $("#stream_start").on('click', function(e){
+ 
+      console.log('stream button clicked');
+
+    $.ajax({
+        type: "GET",
+        url: '/start_streaming',
+        success: function(resp){
+          console.log('done');
+          }
+    });
+ 
+
+    });
+    
+  </script>
+
+
+  
+
+  </body>
+
+  {% endblock content %}
+
+</html>
+
