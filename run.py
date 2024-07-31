@@ -5,17 +5,12 @@ Copyright (c) 2019 - present AppSeed.us
 
 import os, sys
 import pandas as pd
+import numpy as np
 import json
 
-import js
+from datetime import timedelta
 
-import webbrowser
-import threading
-from threading import Timer
-import time
-
-from flask import Flask
-from flask import render_template, request, session, jsonify
+from flask import render_template, request, session
 from flask_migrate import Migrate
 from   flask_minify  import Minify
 from   sys import exit
@@ -24,11 +19,6 @@ from localStoragePy import localStoragePy
 
 from apps.config import config_dict
 from apps import create_app, db
-
-from apps.salesfc.inference import Inference
-import apps.salesfc.config as config
-
-# from apps.streaming import example as str_ex
 
 from apps.analytics import quicksight_embed as qe
 from apps.analytics import bedrock_rag as rag
@@ -41,16 +31,16 @@ from apps.analytics.recommendations import notifications as nof
 from slack import WebClient
 
 
-# # importing BatchEngine from root folder *check* if better way of doing this
+# now cd into sales inference module so we can run main.py for the new sales forecast
+# *check* if better way of doing this - running a python function from a modules from another repo
 import sys
-sys.path.insert(0, '/Users/barry.walsh/rotaready/rr_repos/ML-API')
-
-from modules.batch_engine import BatchEngine
-#import modules.config as config
+sys.path.insert(0, '/Users/barry.walsh/rotaready/rr_repos/ML-modelTraining/training/docker/SalesPredictions/inference')
+# OR ? 
+# %cd "/Users/barry.walsh/rotaready/rr_repos/ML-LabourDemandForecasting/inference/docker/LabourDemandForecasting"
+import main as nsf_inf
 
 client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
 kb_id = os.getenv("BEDROCK_KB")
-
 
 # WARNING: Don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
@@ -92,133 +82,67 @@ if DEBUG:
 def index():
     return render_template('index.html')
     
-# @app.route('/')
-# def index(**kwargs):
-#     if 'token' in kwargs:
-#         return render_template('index.html', token = kwargs['token'])
-#     else:
-#         return render_template('index.html')
-
-
-@app.route("/salesfc", methods=['POST'])
-def salesfc_invocation():
-
-    # gather inputs
-    form_df = pd.DataFrame({'realm': [request.form["realm"]],
-                            'site': [request.form["site"]],
-                                'future_preds': [request.form["future_preds"]],
-                                'start_date': [request.form["start_date"]]
-                                })
-    # form_df.to_csv('form_params.csv') # *check* refactor later just pass temp variables between jquery and flask, no need for a csv  
-
-    # return f"{env}: Forecasting sales for {request.form["realm"]}"
-
-    # *check* consider refactoring as we are using jquery for form handling, is this function even needed anymore ??
-    return render_template('pages/sample-page.html', sessionOutput=f"{env}: Forecasting sales for {request.form["realm"]}")
 
 @app.route("/start_salesfc", methods=['GET'])
 def start_salesfc(): #realm, site, future_preds, start_date):
 
     # NB request.args for GET, request.form for POST requests
 
-    realm = request.args["realm"] # input_data['realm'][0] 
-    site = request.args["site"] #input_data['site'][0]
-    future_preds = request.args["future_preds"] #input_data['future_preds'][0]
-    start_date = request.args["start_date"] #input_data['start_date'][0]
+    salesfc_job = { "env": request.args["env"], 
+                    "realmId": request.args["realm"], 
+                    "entityId": request.args["site"],     
+                    "docker": 0,
+                    "inf_start": request.args["start_date"],
+                    "inf_end": (pd.to_datetime(request.args["start_date"], format="%Y-%m-%d") + timedelta(days=int(request.args["future_preds"]))).strftime('%Y-%m-%d'),
+                    "settings": {"normalisation": False} # not needed for xgboost as underlying decision trees dont need scaled features, and target scaling aslo not required *check*
+                }
 
-    queue = f"ml-model-training-task-manager-{env}-jobs" # *update {env} param later
+    # *check* need to inject vals captured above to main.py (in same way as SQS job)
+    batch = nsf_inf.main(job_override = salesfc_job, notifications = True)
 
-    # *check* change approach below to handle many realms defined in job ?
-    infer = Inference(
-            config.AWS_REGION,
-            queue,
-            config.SLACK_CHANNEL,
-            client,
-            config.BATCH_SIZE,
-            env,
-            realm,
-            site,
-            future_preds
-        )
-
-    job_json = [
-                    {
-                        "realm": realm,
-                        "entity_id": site,
-                        "forecast": "true",
-                        "future_predictions": future_preds,
-                        "start_date": start_date
-                    }
-                ]
+    session["output"]=f"{str(batch['display_msg'])}" # NB session variable must be a string to render in html
+    print("session[output] Output: ", session["output"]) 
+    session["realm-site"]=salesfc_job["realmId"] + " - " + salesfc_job["entityId"]
     
-    # multi job example:
-    # job_json = [
-    #                 {
-    #                     "realm": "temper",
-    #                     "entity_id": "pad",
-    #                     "forecast": "true",
-    #                     "future_predictions": 1,
-    #                     "start_date": "2024-04-26"
-    #                 },
-    #                 {
-    #                     "realm": "temper",
-    #                     "entity_id": "whi",
-    #                     "forecast": "true",
-    #                     "future_predictions": 1,
-    #                     "start_date": "2024-04-26"
-    #                 }
-    #             ]
+    if isinstance(batch['display_msg'], pd.DataFrame): # i.e. a prediction dataframe (rather than an error msg) has been returned
 
-    # start job message on slack flask
-    sqs_batches = [infer.slack_job_start(default_job = {'future_predictions': future_preds, 'start_date': start_date}, batches = job_json)]
-    
-    #slack_posts = client.conversations_history(channel='ml')
-    
-
-    print("sqs_batches: ", sqs_batches)
-
-    batch = BatchEngine(sqs_batches)
-    batchOutput = batch.begin(notifications = True)
-
-    if isinstance(batchOutput['display_msg'], pd.DataFrame): # i.e. a prediction has been returned
-
-        # *check* refactor below - too complicated
-        df = batchOutput['display_msg']
+        # *check* refactor below - may be too complicated
+        forecast_df =  batch['display_msg']
+        forecast_df['Actuals'] = batch['actuals'] # add actuals to df for comparison
 
         #session["fcast_sales"]=int(df.to_dict('list')['sales'][0]) # example forecasted revenue for 1st day of forecast for coststream 1
-        session["fcast_sales"] = f'Total sales forecasted: ${round(df.sales.sum())}'
+        session["fcast_sales"] = f'Total sales forecasted: ${round(forecast_df['Prediction'].sum())}'
 
-        session["output"]=f"{str(batchOutput['display_msg'])}" # NB session variable must be a string to render in html
-
-        print("session[output] Output: ", session["output"])  
-
-        session["realm-site"]=realm + " - " + site
-
-        session["fcast_dates"]= [x.strftime('%d-%b') for x in df.loc[df['stream_id'] == max(df['stream_id'])].to_dict('list')['time']] # example forecasted revenue list of vals for chart or use dummy example [-3, 15, 15, 35, 65, 40, 80, 25, 15, 85, 25, 75] 
+        session["fcast_dates"] = [d for d in np.unique(forecast_df['Date'].dt.strftime('%d-%b')).tolist()]
+        # OLD
+        # session["fcast_dates"]= [x.strftime('%d-%b') for x in df.loc[df['stream_id'] == max(df['stream_id'])].to_dict('list')['time']] # example forecasted revenue list of vals for chart or use dummy example [-3, 15, 15, 35, 65, 40, 80, 25, 15, 85, 25, 75] 
         
-        actuals = batchOutput['actual'] # actual sales - this is all actual sales for the site, so shuld probably filter further upstream in future *check*
 
-        for i in df['stream_id'].unique():
+        for i in forecast_df['stream_id'].unique():
 
             # *check* for now stream_id 1 only
-            forecast_sales = df.loc[df['stream_id'] == i] [['time', 'sales']]
-            filtered_actuals = actuals.loc[actuals['entity_stream'] == site + '-' + i] [['sales']]
+            forecast_sales = forecast_df.loc[forecast_df['stream_id'] == i] [['Date', 'Prediction']]
+            #filtered_actuals = forecast_df.loc[forecast_df['stream_id'] == i] [['Actuals']] # .loc[actuals['entity_stream'] == salesfc_job["entityId"] + '-' + i] [['sales']]
 
-            session[f"fcast_vals_raw_{i}"]= [int(x) for x in forecast_sales.to_dict('list')['sales']] # example forecasted revenue list of vals for chart or use dummy example [-3, 15, 15, 35, 65, 40, 80, 25, 15, 85, 25, 75] 
+            session[f"fcast_vals_raw_{i}"]= [int(x) for x in forecast_sales.to_dict('list')['Prediction']] # example forecasted revenue list of vals for chart or use dummy example [-3, 15, 15, 35, 65, 40, 80, 25, 15, 85, 25, 75] 
 
         # finally filter actual sales only for the forecast time period and put values in a list for html/.js redendering
-        filtered_actuals = filtered_actuals[(filtered_actuals.index>=df.time.iloc[0]) & (filtered_actuals.index<=df.time.iloc[-1])]  
-        session["actuals"]= [int(x) for x in filtered_actuals.to_dict('list')['sales']] 
+        # filtered_actuals = filtered_actuals[(filtered_actuals.index>=df.time.iloc[0]) & (filtered_actuals.index<=df.time.iloc[-1])]  
+        session["actuals"]= forecast_df.groupby(by='Date').agg({'Actuals': 'sum'})['Actuals'].astype(int).tolist() # *check* - update [int(x) for x in filtered_actuals.to_dict('list')['sales']] 
 
-        # finally get notifications (possibly move this to a seprate flask route)
-        notifications = nof.getRecommendations()
+    else:
+        
+        session["fcast_sales"] = f"{str(batch['display_msg'])}" # just display while run failed
 
-        # *check* refactor, we shouldnt have to split out the dictionary here, should be possible in html/.js
-        session["notification_1"]= list(notifications.values())[0]
-        session["notification_2"]= list(notifications.values())[1]
-        session["notification_3"]= list(notifications.values())[2]
-        session["notification_4"]= list(notifications.values())[3]
-        session["notification_5"]= list(notifications.values())[4]
+    # finally get notifications (possibly move this to a seprate flask route)
+    notifications = nof.getRecommendations()
+
+    # *check* refactor, we shouldnt have to split out the dictionary here, should be possible in html/.js
+    session["notification_1"]= list(notifications.values())[0]
+    session["notification_2"]= list(notifications.values())[1]
+    session["notification_3"]= list(notifications.values())[2]
+    session["notification_4"]= list(notifications.values())[3]
+    session["notification_5"]= list(notifications.values())[4]
 
     return render_template('pages/sample-page.html' ) 
 

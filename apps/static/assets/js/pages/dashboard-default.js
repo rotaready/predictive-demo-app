@@ -41,8 +41,8 @@ var fcast_vals_3 = fcast_vals_raw_3.match(/-?\d+/g);
 var fcast_vals_4 = fcast_vals_raw_4.match(/-?\d+/g);
 var fcast_vals_5 = fcast_vals_raw_5.match(/-?\d+/g);
 var fcast_vals_6 = fcast_vals_raw_6.match(/-?\d+/g);
-var cumm_sales = Math.max.apply(null, fcast_vals_1);
 var actual_sales = actual_sales_raw.match(/-?\d+/g);
+var cumm_sales = Math.max(Math.max.apply(Math, actual_sales),Math.max.apply(Math, fcast_vals_1)) + 500;
 var fcast_dates = eval(fcast_dates_raw);
 
 // debug
@@ -56,6 +56,9 @@ console.log(fcast_dates_raw)
 console.log(typeof fcast_dates_raw)
 console.log(fcast_dates)
 console.log(typeof fcast_dates)
+console.log(Math.max.apply(Math, actual_sales))
+console.log(Math.max.apply(Math, fcast_vals_1))
+console.log(cumm_sales)
 // console.log(newData) 
 
 function floatchart() {
@@ -226,7 +229,14 @@ function floatchart() {
             legend: {
               position: 'bottom',
               offsetX: -10,
-              offsetY: 0
+              offsetY: 0,
+              fontSize: "32px",
+            labels: {
+              style: {
+                  colors: ['white'],
+          },
+        },
+
             }
           }
         }
@@ -234,12 +244,23 @@ function floatchart() {
       xaxis: {
         type: 'category',
         // categories: ['Mon', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        categories: fcast_dates
+        categories: fcast_dates,
+        labels: {
+          style: {
+              colors: ['white','white','white','white','white'], /* *check* change array to length = forecast length */
+      },
+    }
       },
       yaxis: {
         min: 0,
-        max: cumm_sales + 500
+        max: cumm_sales + 500,
+        labels: {
+          style: {
+              colors: ['white'],
       },
+    }
+  },
+      
       grid: {
         strokeDashArray: 4
       },
