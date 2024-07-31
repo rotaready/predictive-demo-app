@@ -105,6 +105,8 @@ if (performance.navigation.type == performance.navigation.TYPE_RELOAD) {
             
             <!-- onsubmit="return false" prevents a page refresh on form submission -->
             <form id="salesfc_form" method="post">
+              <label for="env">Environment:</label><br>
+              <input type="text" value="local" id="env" name="env"><br>
               <label for="realm">Realm:</label><br>
               <input type="text" value="temper" id="realm" name="realm"><br>
               <label for="site">Site:</label><br>
@@ -196,13 +198,7 @@ $("#salesfc_submit").on('click', function(e){
 
           $('#startMsg').show();
 
-          // when a button is clicked, you make an Ajax call.
-          // var sessOutputVar = '{{ session["realm"] }}';
-
-          // var form_data = $('salesfc_form').serialize();
-          // // $.post('/salesfc', form_data);  
-          // $.post("{{url_for('salesfc_invocation')}}", form_data);
-
+          var envVal = $("#env").val();
           var realmVal = $("#realm").val();
           var siteVal = $("#site").val();
           var predsVal = $("#future_preds").val();
@@ -259,7 +255,8 @@ $("#salesfc_submit").on('click', function(e){
           $.ajax({
               type: "GET",
               url: '/start_salesfc',
-              data: {realm: realmVal,
+              data: {env: envVal,
+                          realm: realmVal,
                           site: siteVal,
                           future_preds: predsVal,
                           start_date: startVal},
