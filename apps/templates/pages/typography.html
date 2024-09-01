@@ -145,6 +145,9 @@
       <div class="page-block">
 
         <div class="row align-items-center">
+
+          <button type="submit" id="refresh_job_status" class="btn large-modal" style="background-color:#d4e7f9; color: #111936; width:150px; margin-left: 40px; margin-top: 10px;">Refresh job status</button>
+
           <div class="col-md-12">
               <iframe src="http://localhost:5173" 
               style="width:1200px; height:300px; border: 1px solid black;"></iframe>
@@ -263,6 +266,23 @@
 
 
       });
+
+
+      $("#refresh_job_status").on('click', function(e){
+ 
+        console.log('refresh job status clicked');
+
+        $.ajax({
+          type: "GET",
+          url: '/refresh_job_status',
+          success: function(resp){
+            console.log('done');
+            }
+        });
+
+
+        });
+
 
       </script>
     
