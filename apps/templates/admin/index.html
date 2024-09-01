@@ -90,7 +90,7 @@
                 <div class="tab-pane" id="chart-tab-profile" role="tabpanel" aria-labelledby="chart-tab-profile-tab" tabindex="0">
                   <div class="row">
                     <div class="col-6">
-                      <span class="text-white d-block f-34 f-w-500 my-2">$29961 <i class="ti ti-arrow-down-right-circle opacity-50"></i></span>
+                      <span class="text-white d-block f-34 f-w-500 my-2">$299 <i class="ti ti-arrow-down-right-circle opacity-50"></i></span>
                       <p class="mb-0 opacity-50">C/W Last Year</p>
                     </div>
                     <div class="col-6">
@@ -142,43 +142,6 @@
           </div>
         </div>
 
-
-        <div class="col-xl-4 col-md-6">
-          <div class="card bg-secondary-dark dashnum-card text-white overflow-hidden">
-            <span class="round small"></span>
-            <span class="round big"></span>
-            <div class="card-body">
-              <div class="row">
-                <div class="col">
-                  <div class="avtar avtar-lg">
-                    <i class="text-white ti ti-credit-card"></i>
-                  </div>
-                </div>
-                <div class="col-auto">
-                  <div class="btn-group">
-                    <a
-                      type="button"
-                      class="avtar bg-secondary dropdown-toggle arrow-none"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                    >
-                      <i class="ti ti-dots"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li><button class="dropdown-item" type="button">Import Card</button></li>
-                      <li><button class="dropdown-item" type="button">Export</button></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <span class="text-white d-block f-34 f-w-500 my-2">{window.token} previously 1350 <i class="ti ti-arrow-up-right-circle opacity-50"></i></span>
-              <p class="mb-0 opacity-50">Forecast Prediction Here</p>
-            </div>
-          </div>
-        </div>
-        
-        
-        
         <div class="col-xl-4 col-md-12">
           <div class="card">
             <div class="card-body">
@@ -286,6 +249,41 @@
     </div>
   </div>
   <!-- [ Main Content ] end -->
+
+  <div class="col-xl-4 col-md-6">
+    <div class="card bg-secondary-dark dashnum-card text-white overflow-hidden">
+      <span class="round small"></span>
+      <span class="round big"></span>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <div class="avtar avtar-lg">
+              <i class="text-white ti ti-credit-card"></i>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="btn-group">
+              <a
+                type="button"
+                class="avtar bg-secondary dropdown-toggle arrow-none"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="ti ti-dots"></i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><button class="dropdown-item" type="button">Import Card</button></li>
+                <li><button class="dropdown-item" type="button">Export</button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <span class="text-white d-block f-34 f-w-500 my-2">{window.token} previously 1350 <i class="ti ti-arrow-up-right-circle opacity-50"></i></span>
+        <p class="mb-0 opacity-50">Forecast Prediction Here</p>
+      </div>
+    </div>
+  </div>
+
 {% endblock content %}
 
 {% block extra_js %}

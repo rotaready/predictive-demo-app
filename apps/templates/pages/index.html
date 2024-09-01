@@ -5,6 +5,26 @@
 
 <head>
   <script>window.token = "{{ token }}"</script>
+
+  <!-- remove below - this is now invoked by clicking "View All" under recommendations -->
+  <!-- <script>
+    $("#absence_analysis").on('click', function(e){
+   
+      console.log('getting absence analysis');
+  
+      $.ajax({
+        type: "GET",
+        url: '/absence_analysis',
+        success: function(resp){
+          console.log('done');
+          }
+      });
+  
+  
+      });
+  
+  </script> -->
+
 </head>
 
   <!-- [ Main Content ] start -->
@@ -15,7 +35,7 @@
         <!-- [ sample-page ] start -->
 
         <!-- growth chart block -->
-        <div class="col-xl-8 col-md-12" id="forecast_chart" style="display: none;">
+        <div class="col-xl-8 col-md-12" id="forecast_chart" style="display:none;">
           <div class="card">
             <div class="card-body">
               <div class="row mb-3 align-items-center">
@@ -36,8 +56,21 @@
           </div>
         </div>
 
+        <!-- placeholder sales chart block prior to running sales forecast -->
+        <div class="col-xl-8 col-md-12" id="placeholder_block" style="display:none;">
+          <div class="card" >
+            <div class="card-body" id="placeholder-card">
+              <div class="row mb-3 align-items-center">
+                <div class="col" margin: "-30px" style="display: flex; justify-content: center; margin-top: 70px;">
+                  <iframe class="placeholder-iframe" src="https://t4.ftcdn.net/jpg/02/77/71/45/360_F_277714513_fQ0akmI3TQxa0wkPCLeO12Rx3cL2AuIf.jpg"></iframe> <!-- <!-- <!-- or youtube video placeholder here: https://www.youtube.com/embed/RhlQvbvMg-0?si=9v-o2opHNpy3jYxZ -->
+                </div>  
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- line chart block -->
-        <div class="col-xl-4 col-md-6">
+        <div class="col-xl-4 col-md-6" id ="earnings_div">
           <div class="card bg-primary-dark dashnum-card text-white overflow-hidden">
             <span class="round small"></span>
             <span class="round big"></span>
@@ -94,7 +127,7 @@
                 <div class="tab-pane" id="chart-tab-profile" role="tabpanel" aria-labelledby="chart-tab-profile-tab" tabindex="0">
                   <div class="row">
                     <div class="col-6">
-                      <span class="text-white d-block f-34 f-w-500 my-2">$29961 <i class="ti ti-arrow-down-right-circle opacity-50"></i></span>
+                      <span class="text-white d-block f-34 f-w-500 my-2">$299 <i class="ti ti-arrow-down-right-circle opacity-50"></i></span>
                       <p class="mb-0 opacity-50">C/W Last Year</p>
                     </div>
                     <div class="col-6">
@@ -108,7 +141,7 @@
         </div>
 
         <!-- short KPI cards -->
-        <div class="col-xl-4 col-md-12">
+        <div class="col-xl-4 col-md-12" id ="profit_rev_div">
           <div class="card bg-primary-dark dashnum-card dashnum-card-small text-white overflow-hidden">
             <span class="round bg-primary small"></span>
             <span class="round bg-primary big"></span>
@@ -141,66 +174,12 @@
           </div>
         </div>
 
-        <div class="col-xl-4 col-md-6">
-          <div class="card bg-secondary-dark dashnum-card text-white overflow-hidden">
-            <span class="round small"></span>
-            <span class="round big"></span>
-            <div class="card-body">
-              <div class="row">
-                <div class="col">
-                  <div class="avtar avtar-lg">
-                    <i class="text-white ti ti-credit-card"></i>
-                  </div>
-                </div>
-                <div class="col-auto">
-                  <div class="btn-group">
-                    <a
-                      type="button"
-                      class="avtar bg-secondary dropdown-toggle arrow-none"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                    >
-                      <i class="ti ti-dots"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li><button class="dropdown-item" type="button">Import Card</button></li>
-                      <li><button class="dropdown-item" type="button">Export</button></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <span class="text-white d-block f-34 f-w-500 my-2">
-                <!-- {window.token} previously 1350   -->
-                <!-- <div id="fcast_sales">{{ session["fcast_sales"] }}</div> -->
-                <!-- *check* below need to refactor in .js with a for loop for each cost stream -->
-                <div id="actual_sales_raw" style="display: none;">{{ session["actuals"] }}</div>
-                <div id="fcast_vals_raw_1" style="display: none;">{{ session["fcast_vals_raw_1"] }}</div>
-                <div id="fcast_vals_raw_2" style="display: none;">{{ session["fcast_vals_raw_2"] }}</div>
-                <div id="fcast_vals_raw_3" style="display: none;">{{ session["fcast_vals_raw_3"] }}</div>
-                <div id="fcast_vals_raw_4" style="display: none;">{{ session["fcast_vals_raw_4"] }}</div>
-                <div id="fcast_vals_raw_5" style="display: none;">{{ session["fcast_vals_raw_5"] }}</div>
-                <div id="fcast_vals_raw_6" style="display: none;">{{ session["fcast_vals_raw_6"] }}</div>
-                <div id="fcast_dates" style="display: none;">{{ session["fcast_dates"] }}</div>
-                <!-- {{ session["output"] }} AND
-                {{ session["fcast_sales"] }} -->
-                <!-- <p id="homeMsg" style="display:none;">{window.token} previously 1350</p> -->
-                  <!-- <script>localStorage.getItem("sfcast")</script> -->
-                <i class="ti ti-arrow-up-right-circle opacity-50"></i>
-              </span>
-              <p class="mb-0 opacity-50">Forecast Prediction Here (previously: Total Pending Orders)</p>
-            </div>
-          </div>
-        </div>
-        
-        
-
-        
-        <div class="col-xl-4 col-md-12">
+        <div class="col-xl-4 col-md-12" id ="stocks_div">
           <div class="card">
             <div class="card-body">
               <div class="row mb-3 align-items-center">
                 <div class="col">
-                  <h4>Popular Stocks</h4>
+                  <h4>Recommendations</h4>
                 </div>
                 <div class="col-auto"> </div>
               </div>
@@ -222,12 +201,13 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">Bajaj Finery</h5>
-                      <small class="text-success">10% Profit</small>
+                      <h5 class="mb-0">{{  session["most_absences"] }}</h5> 
+                      <!-- <h5 class="mb-0">Bajaj Finery</h5> -->
+                      <small class="text-success">most_absences</small> <!-- 10% Profit -->
                     </div>
                     <div class="col-auto">
                       <h4 class="mb-0"
-                        >$1839.00<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
+                        >{{  session["most_absences_result"] }}<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
                           ><i class="ti ti-chevron-up text-success"></i></span
                       ></h4>
                     </div>
@@ -236,12 +216,12 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">TTML</h5>
-                      <small class="text-danger">10% Profit</small>
+                      <h5 class="mb-0">{{  session["least_num_last_min_absences"] }}</h5>
+                      <small class="text-danger">least_num_last_min_absences</small>
                     </div>
                     <div class="col-auto">
                       <h4 class="mb-0"
-                        >$100.00<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                        >{{  session["least_num_last_min_absences_result"] }}<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
                           ><i class="ti ti-chevron-down text-danger"></i></span
                       ></h4>
                     </div>
@@ -250,12 +230,12 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">Reliance</h5>
-                      <small class="text-success">10% Profit</small>
+                      <h5 class="mb-0">{{  session["latest_absence_leadtime"] }}</h5>
+                      <small class="text-success">latest_absence_leadtime</small>
                     </div>
                     <div class="col-auto">
                       <h4 class="mb-0"
-                        >$200.00<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
+                        >{{  session["latest_absence_leadtime_result"]}} days<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
                           ><i class="ti ti-chevron-up text-success"></i></span
                       ></h4>
                     </div>
@@ -264,12 +244,12 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">TTML</h5>
-                      <small class="text-danger">10% Profit</small>
+                      <h5 class="mb-0">{{  session["earliest_absence_leadtime"] }}</h5>
+                      <small class="text-danger">earliest_absence_leadtime </small>
                     </div>
                     <div class="col-auto">
                       <h4 class="mb-0"
-                        >$189.00<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                        >{{  session["earliest_absence_leadtime_result"]}} days<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
                           ><i class="ti ti-chevron-down text-danger"></i></span
                       ></h4>
                     </div>
@@ -278,12 +258,12 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">Stolon</h5>
-                      <small class="text-danger">10% Profit</small>
+                      <h5 class="mb-0">{{  session["shortest_avg_absence_duration"] }}</h5>
+                      <small class="text-danger">shortest_avg_absence_duration</small>
                     </div>
                     <div class="col-auto">
                       <h4 class="mb-0"
-                        >$189.00<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                        >{{  session["shortest_avg_absence_duration_result"] }} hours<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
                           ><i class="ti ti-chevron-down text-danger"></i></span
                       ></h4>
                     </div>
@@ -291,22 +271,83 @@
                 </li>
               </ul>
               <div class="text-center">
-                <a href="#!" class="b-b-primary text-primary">View all <i class="ti ti-chevron-right"></i></a>
+                <a href="/absence_analysis" class="b-b-primary text-primary">Absences <i class="ti ti-chevron-right"></i></a>
               </div>
             </div>
           </div>
+
         </div>
         <!-- [ sample-page ] end -->
+
+
+      
+
+  <div class="col-xl-4 col-md-6" id ="orders_div">
+    <div class="card bg-secondary-dark dashnum-card text-white overflow-hidden">
+      <span class="round small"></span>
+      <span class="round big"></span>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <div class="avtar avtar-lg">
+              <i class="text-white ti ti-credit-card"></i>
+            </div>
+          </div>
+          <div class="col-auto">
+            <div class="btn-group">
+              <a
+                type="button"
+                class="avtar bg-secondary dropdown-toggle arrow-none"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i class="ti ti-dots"></i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><button class="dropdown-item" type="button">Import Card</button></li>
+                <li><button class="dropdown-item" type="button">Export</button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <span class="text-white d-block f-34 f-w-500 my-2">
+          <!-- {window.token} previously 1350   -->
+          <!-- <div id="fcast_sales">{{ session["fcast_sales"] }}</div> -->
+          <!-- *check* below need to refactor in .js with a for loop for each cost stream -->
+          <div id="actual_sales_raw" style="display: none;">{{ session["actuals"] }}</div>
+          <div id="fcast_vals_raw_1" style="display: none;">{{ session["fcast_vals_raw_1"] }}</div>
+          <div id="fcast_vals_raw_2" style="display: none;">{{ session["fcast_vals_raw_2"] }}</div>
+          <div id="fcast_vals_raw_3" style="display: none;">{{ session["fcast_vals_raw_3"] }}</div>
+          <div id="fcast_vals_raw_4" style="display: none;">{{ session["fcast_vals_raw_4"] }}</div>
+          <div id="fcast_vals_raw_5" style="display: none;">{{ session["fcast_vals_raw_5"] }}</div>
+          <div id="fcast_vals_raw_6" style="display: none;">{{ session["fcast_vals_raw_6"] }}</div>
+          <div id="fcast_dates" style="display: none;">{{ session["fcast_dates"] }}</div>
+          <!-- {{ session["output"] }} AND
+          {{ session["fcast_sales"] }} -->
+          <!-- <p id="homeMsg" style="display:none;">{window.token} previously 1350</p> -->
+            <!-- <script>localStorage.getItem("sfcast")</script> -->
+          <i class="ti ti-arrow-up-right-circle opacity-50"></i>
+        </span>
+        <p class="mb-0 opacity-50">Forecast Prediction Here (previously: Total Pending Orders)</p>
       </div>
-      <!-- [ Main Content ] end -->
     </div>
   </div>
-  <!-- [ Main Content ] end -->
+
+</div>
+<!-- [ Main Content ] end -->
+</div>
+</div>
+<!-- [ Main Content ] end -->
+
+
+
+
 {% endblock content %}
 
 {% block extra_js %}
   <!-- Apex Chart -->
   <script src="{{ url_for('static', filename='assets/js/plugins/apexcharts.min.js') }}"></script>
   <script src="{{ url_for('static', filename='assets/js/pages/dashboard-default.js') }}"></script>
+  
   <!-- [Page Specific JS] end -->
 {% endblock extra_js %}

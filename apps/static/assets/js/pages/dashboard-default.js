@@ -29,8 +29,15 @@ let fcast_dates_raw = document.getElementById("fcast_dates").innerHTML;
 
 // unhide forecast chart div if forecast(fcast_vals_raw) is returned
 if (fcast_vals_raw_1 != '') {
-    document.getElementById("forecast_chart").style.display = 'block'; 
+      document.getElementById("forecast_chart").style.display = 'block'; 
+    } else {
+      document.getElementById("placeholder_block").style.display = 'block';
     }
+
+  document.getElementById("stocks_div").style.order = 1; /* puts the stocks div 'first' to the RHS of the main actual var. forecast chart then the other divs below below the main chart*/
+  document.getElementById("earnings_div").style.order = 2; 
+  document.getElementById("profit_rev_div").style.order = 3; 
+  document.getElementById("orders_div").style.order = 4; 
 
 
   // *check* use forecast_vals - and add a note how this works by getting the numbers from the string received from python (session variable) into the .js arrary needed for apexcharts
@@ -56,6 +63,7 @@ console.log(fcast_dates_raw)
 console.log(typeof fcast_dates_raw)
 console.log(fcast_dates)
 console.log(typeof fcast_dates)
+console.log('length of dates array is ' + fcast_dates.length);
 console.log(Math.max.apply(Math, actual_sales))
 console.log(Math.max.apply(Math, fcast_vals_1))
 console.log(cumm_sales)
@@ -247,7 +255,7 @@ function floatchart() {
         categories: fcast_dates,
         labels: {
           style: {
-              colors: ['white','white','white','white','white'], /* *check* change array to length = forecast length */
+              colors:  Array(fcast_dates.length).fill('white'), 
       },
     }
       },
