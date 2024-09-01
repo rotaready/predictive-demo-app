@@ -27,6 +27,7 @@ from apps.analytics import bedrock_rag_LangChain as lc
 from apps.analytics import openai_nlp2sql as oai
 
 from apps.analytics.recommendations import notifications as nof
+from apps.analytics.recommendations import absences as ab
 
 from slack import WebClient
 
@@ -80,6 +81,7 @@ if DEBUG:
 # index route, shows index.html view
 @app.route('/')
 def index():
+
     return render_template('index.html')
     
 
@@ -164,6 +166,29 @@ def analytics():
     session["qs_url"]=qe.getDashboardURL()
 
     print("session[qs_url]: ", session["qs_url"])
+
+    return render_template('pages/typography.html')
+
+
+@app.route("/absence_analysis", methods=['GET'])
+def absence_analysis(): 
+
+    # get absences
+    absences = ab.absences_analyis()
+
+    # *check* refactor, we shouldnt have to split out the dictionary here, should be possible in html/.js
+    for i in range(len(absences)):
+        session[f'{[elem for elem in absences.keys()][i]}'] = [elem for elem in absences.values()][i].split()[0]
+        session[f'{[elem for elem in absences.keys()][i]}_result'] = [elem for elem in absences.values()][i].split()[1]
+    return render_template('pages/index.html')
+
+
+@app.route("/refresh_job_status", methods=['GET'])
+def refresh_job_status(): 
+
+    # str_ex.main() # just stream
+    import subprocess
+    subprocess.run(["python", "apps/analytics/genai_rds_export.py"]) # *check* run in background
 
     return render_template('pages/typography.html')
 
