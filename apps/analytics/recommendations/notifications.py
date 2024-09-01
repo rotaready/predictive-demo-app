@@ -22,13 +22,24 @@ def getRecommendations(**kwargs):
 
     '''Highest Hourly Sale (for this month)'''
 
-    # filter data on only those client-sites where we have at least 24 hourly transactions in a day 
-    # # (otherwise its more likely the revenue attributed to that hour is actually for the entire day)
+    # filter data on only those client-sites where we have at least 10 hourly transactions in a day 
+    # (otherwise its more likely the revenue attributed to that hour is actually for the entire day)
     highest_hourly = hourly_summary[(hourly_summary.salesYear==datetime.now().year) & 
                                     (hourly_summary.salesMonth==datetime.now().month) &
-                                    (hourly_summary.num_hrly_txns>=24)] \
+                                    (hourly_summary.num_hrly_txns>=10)] \
                                 .sort_values('max_revenue', ascending = False)
-
+    
+    # go back to previous month
+    if len(highest_hourly) == 0 and datetime.now().month !=1:
+        highest_hourly = hourly_summary[(hourly_summary.salesYear==datetime.now().year) & 
+                                    (hourly_summary.salesMonth==datetime.now().month-1) &
+                                    (hourly_summary.num_hrly_txns>=10)] \
+                                .sort_values('max_revenue', ascending = False)
+    elif len(highest_hourly) == 0 and datetime.now().month ==1:
+        highest_hourly = hourly_summary[(hourly_summary.salesYear==datetime.now().year-1) & 
+                                    (hourly_summary.salesMonth==12) &
+                                    (hourly_summary.num_hrly_txns>=10)] \
+                                .sort_values('max_revenue', ascending = False)
     # prepare notification
     realm_site = f'{highest_hourly['realm'].iloc[0]}-{highest_hourly['entity_id'].iloc[0]}'
     stream = str(highest_hourly['stream_id'].iloc[0])
