@@ -3,7 +3,8 @@ import mysql.connector
 import pandas as pd
 from apps.analytics import lollipop_policy as lp
 from apps.analytics import create_sql_prompt as pol
-from openai import OpenAI
+# from openai import OpenAI
+from openai import AzureOpenAI
 
 def main(input: str,
      **kwargs
@@ -20,8 +21,6 @@ def nlp2sql(
     input: str,
      **kwargs
 ):
-
-    openai_client = OpenAI(api_key=os.getenv('CE_OPENAI_API_KEY'))
 
     local_host = os.getenv("RDS_HOST")
     local_user = os.getenv("RDS_USER")
@@ -51,9 +50,22 @@ def nlp2sql(
         "content": prompt.user
         }
         ]
+    
+    # NB formerly openai_client (direct) now through Access Azure API
+    #openai_client = OpenAI(api_key=os.getenv('ACC_AZURE_OPENAI_KEY'))
 
-    response = openai_client.chat.completions.create(
-            model = "gpt-3.5-turbo",
+    AZURE_OPENAI_ENDPOINT = "https://hospitalityopenai.openai.azure.com/"
+    client = AzureOpenAI(
+        api_key=os.getenv("ACC_AZURE_OPENAI_KEY"), 
+        api_version="2024-02-01",
+        azure_endpoint = AZURE_OPENAI_ENDPOINT
+        )
+
+    
+    deployment_name='RotareadyGPT35' #This will correspond to the custom name you chose for your deployment when you deployed a model. Use a gpt-35-turbo-instruct deployment. 
+  
+    response = client.chat.completions.create(
+            model = deployment_name, # formerly direct OpenAI model: "gpt-3.5-turbo",
             messages = converted_message,
             temperature = 0.3,
             max_tokens = 256)
