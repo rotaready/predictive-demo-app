@@ -14,6 +14,7 @@ __pycache__/
 # venv
 env
 venv
+.venv
 
 # other
 .DS_Store
@@ -30,6 +31,7 @@ package-lock.json
 apps/static/assets/node_modules
 apps/static/assets/yarn.lock
 apps/static/assets/.temp
+.yarn
 
 .env__
 
