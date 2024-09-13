@@ -4,6 +4,7 @@
 {% block content %}
 
 <head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script>window.token = "{{ token }}"</script>
 
   <!-- remove below - this is now invoked by clicking "View All" under recommendations -->
@@ -24,6 +25,51 @@
       });
   
   </script> -->
+
+  <!-- after clicking on absence analysis, update default notifications -->
+   <!-- NB must be at top of script as reload invoked by clicking "Absences" -->
+
+<script>
+
+  $(document).ready(function (){
+  
+  
+        // document.getElementById("most_absences").innerHTML="Bajaj Finery";
+        // $('#most_absences').show();
+  
+        // change variable names on reload 
+        if (performance.navigation.type == performance.navigation.TYPE_RELOAD) {
+  
+          console.info( "This page is reloaded" );
+  
+          // client notification
+          document.getElementById("most_absences").innerHTML = "{{ session['most_absences'] }}";
+          document.getElementById("least_num_last_min_absences").innerHTML = "{{ session['least_num_last_min_absences'] }}";
+          document.getElementById("latest_absence_leadtime").innerHTML = "{{ session['latest_absence_leadtime'] }}";
+          document.getElementById("earliest_absence_leadtime").innerHTML = "{{ session['earliest_absence_leadtime'] }}";
+          document.getElementById("shortest_avg_absence_duration").innerHTML = "{{ session['shortest_avg_absence_duration'] }}";
+  
+          // labels
+          document.getElementById("most_absences_label").innerHTML = "most absences";
+          document.getElementById("least_num_last_min_absences_label").innerHTML = "least last minute absences";
+          document.getElementById("latest_absence_leadtime_label").innerHTML = "latest absence leadtime";
+          document.getElementById("earliest_absence_leadtime_label").innerHTML = "earliest absence leadtime";
+          document.getElementById("shortest_avg_absence_duration_label").innerHTML = "shortest average absence duration";
+        
+          // result
+          document.getElementById("most_absences_result").innerHTML = "{{ session['most_absences_result'] }}";
+          document.getElementById("least_num_last_min_absences_result").innerHTML =  "{{ session['least_num_last_min_absences_result'] }}";
+          document.getElementById("latest_absence_leadtime_result").innerHTML = "{{ session['latest_absence_leadtime_result'] }} days";
+          document.getElementById("earliest_absence_leadtime_result").innerHTML = "{{ session['earliest_absence_leadtime_result'] }} days";
+          document.getElementById("shortest_avg_absence_duration_result").innerHTML = "{{ session['shortest_avg_absence_duration_result'] }} hours";
+  
+        }
+      
+      });
+  
+    </script>
+
+
 
 </head>
 
@@ -61,8 +107,10 @@
           <div class="card" >
             <div class="card-body" id="placeholder-card">
               <div class="row mb-3 align-items-center">
-                <div class="col" margin: "-30px" style="display: flex; justify-content: center; margin-top: 70px;">
-                  <iframe class="placeholder-iframe" src="https://t4.ftcdn.net/jpg/02/77/71/45/360_F_277714513_fQ0akmI3TQxa0wkPCLeO12Rx3cL2AuIf.jpg"></iframe> <!-- <!-- <!-- or youtube video placeholder here: https://www.youtube.com/embed/RhlQvbvMg-0?si=9v-o2opHNpy3jYxZ -->
+                <div class="col" style="position:relative; width:100%; height:0px; padding-bottom:56.25%;">
+                  <iframe class="responsive-iframe" style="position:absolute; left:0; top:0; width:100%; height:100%" 
+                    src="https://www.youtube.com/embed/QMKM4d1ly88?si=5cpiyVoZOzrx_CKg">
+                  </iframe> <!-- <!-- <!-- original source here: https://t4.ftcdn.net/jpg/02/77/71/45/360_F_277714513_fQ0akmI3TQxa0wkPCLeO12Rx3cL2AuIf.jpg or youtube video placeholder here: https://www.youtube.com/embed/RhlQvbvMg-0?si=9v-o2opHNpy3jYxZ -->
                 </div>  
               </div>
             </div>
@@ -201,14 +249,13 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">{{  session["most_absences"] }}</h5> 
-                      <!-- <h5 class="mb-0">Bajaj Finery</h5> -->
-                      <small class="text-success">most_absences</small> <!-- 10% Profit -->
+                      <h5 class="mb-0" id="most_absences">rotaready</h5> <!-- Bajaj Finery -->
+                      <small class="text-success" id="most_absences_label">10% Profit</small> <!-- 10% Profit -->
                     </div>
                     <div class="col-auto">
-                      <h4 class="mb-0"
-                        >{{  session["most_absences_result"] }}<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
-                          ><i class="ti ti-chevron-up text-success"></i></span
+                      <h4 class="mb-0" id="most_absences_result">
+                        <span class="ms-2 align-top avtar avtar-xxs bg-light-success"
+                          ><i class="ti ti-chevron-up text-success"></i></span>
                       ></h4>
                     </div>
                   </div>
@@ -216,13 +263,27 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">{{  session["least_num_last_min_absences"] }}</h5>
-                      <small class="text-danger">least_num_last_min_absences</small>
+                      <h5 class="mb-0" id="least_num_last_min_absences">S4Labour</h5>
+                      <small class="text-danger" id="least_num_last_min_absences_label">15% Loss</small>
                     </div>
                     <div class="col-auto">
-                      <h4 class="mb-0"
-                        >{{  session["least_num_last_min_absences_result"] }}<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
-                          ><i class="ti ti-chevron-down text-danger"></i></span
+                      <h4 class="mb-0" id="least_num_last_min_absences_result">
+                        <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                          ><i class="ti ti-chevron-down text-danger"></i></span>
+                      ></h4>
+                    </div>
+                  </div>  
+                </li>
+                <li class="list-group-item px-0">
+                  <div class="row align-items-start">
+                    <div class="col">
+                      <h5 class="mb-0" id="latest_absence_leadtime">Fourth</h5>
+                      <small class="text-success" id="latest_absence_leadtime_label">3% Profit</small>
+                    </div>
+                    <div class="col-auto">
+                      <h4 class="mb-0" id="latest_absence_leadtime_result">
+                        <span class="ms-2 align-top avtar avtar-xxs bg-light-success"
+                          ><i class="ti ti-chevron-up text-success"></i></span>
                       ></h4>
                     </div>
                   </div>
@@ -230,13 +291,13 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">{{  session["latest_absence_leadtime"] }}</h5>
-                      <small class="text-success">latest_absence_leadtime</small>
+                      <h5 class="mb-0" id="earliest_absence_leadtime">Deputy</h5>
+                      <small class="text-danger" id="earliest_absence_leadtime_label">8% Loss</small>
                     </div>
                     <div class="col-auto">
-                      <h4 class="mb-0"
-                        >{{  session["latest_absence_leadtime_result"]}} days<span class="ms-2 align-top avtar avtar-xxs bg-light-success"
-                          ><i class="ti ti-chevron-up text-success"></i></span
+                      <h4 class="mb-0" id="earliest_absence_leadtime_result">
+                        <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                          ><i class="ti ti-chevron-down text-danger"></i></span>
                       ></h4>
                     </div>
                   </div>
@@ -244,34 +305,20 @@
                 <li class="list-group-item px-0">
                   <div class="row align-items-start">
                     <div class="col">
-                      <h5 class="mb-0">{{  session["earliest_absence_leadtime"] }}</h5>
-                      <small class="text-danger">earliest_absence_leadtime </small>
+                      <h5 class="mb-0" id="shortest_avg_absence_duration">Workforce</h5>
+                      <small class="text-danger" id="shortest_avg_absence_duration_label">1% Loss</small>
                     </div>
                     <div class="col-auto">
-                      <h4 class="mb-0"
-                        >{{  session["earliest_absence_leadtime_result"]}} days<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
-                          ><i class="ti ti-chevron-down text-danger"></i></span
-                      ></h4>
-                    </div>
-                  </div>
-                </li>
-                <li class="list-group-item px-0">
-                  <div class="row align-items-start">
-                    <div class="col">
-                      <h5 class="mb-0">{{  session["shortest_avg_absence_duration"] }}</h5>
-                      <small class="text-danger">shortest_avg_absence_duration</small>
-                    </div>
-                    <div class="col-auto">
-                      <h4 class="mb-0"
-                        >{{  session["shortest_avg_absence_duration_result"] }} hours<span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
-                          ><i class="ti ti-chevron-down text-danger"></i></span
+                      <h4 class="mb-0" id="shortest_avg_absence_duration_result">
+                        <span class="ms-2 align-top avtar avtar-xxs bg-light-danger"
+                          ><i class="ti ti-chevron-down text-danger"></i></span>
                       ></h4>
                     </div>
                   </div>
                 </li>
               </ul>
               <div class="text-center">
-                <a href="/absence_analysis" class="b-b-primary text-primary">Absences <i class="ti ti-chevron-right"></i></a>
+                <a href="/absence_analysis" class="b-b-primary text-primary" id="absence_click">Absences <i class="ti ti-chevron-right"></i></a>
               </div>
             </div>
           </div>
@@ -339,8 +386,43 @@
 </div>
 <!-- [ Main Content ] end -->
 
+<script> 
+
+      // var ac = document.getElementById("absence_click")
+      // ac.onclick = reloadWindow;
 
 
+      // function reloadWindow() {
+      //   console.log('getting absence analysis');
+      //   window.location.reload();
+      //   return false;
+      // }
+
+
+      var ac = document.getElementById('absence_click');
+      ac.onclick = get_absences_reload_screen;
+
+
+    function get_absences_reload_screen() {
+
+          $.ajax({
+                  type: "GET",
+                  url: '/absence_analysis',
+                              success: function (resp) {
+                                    // remove message and reload page after graceful 10 secs
+                                    setTimeout(function(){
+                                        window.location.reload();
+                                    }, 1000);
+                                  },
+                                  error: function (error) {
+                                    console.log(error);
+                                  }
+                                })
+        
+      return false;
+    }
+
+</script>     
 
 {% endblock content %}
 
@@ -348,6 +430,8 @@
   <!-- Apex Chart -->
   <script src="{{ url_for('static', filename='assets/js/plugins/apexcharts.min.js') }}"></script>
   <script src="{{ url_for('static', filename='assets/js/pages/dashboard-default.js') }}"></script>
+
   
+
   <!-- [Page Specific JS] end -->
 {% endblock extra_js %}
