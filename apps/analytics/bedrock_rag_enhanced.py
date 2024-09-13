@@ -1,5 +1,5 @@
 import boto3
-from langchain.llms.bedrock import Bedrock
+from langchain_community.llms import Bedrock
 
 from langchain.prompts import PromptTemplate
 

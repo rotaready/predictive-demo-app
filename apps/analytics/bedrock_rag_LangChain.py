@@ -1,7 +1,7 @@
 import boto3
 
-from langchain.llms.bedrock import Bedrock
-from langchain.retrievers.bedrock import AmazonKnowledgeBasesRetriever
+from langchain_community.llms import Bedrock
+from langchain_community.retrievers import AmazonKnowledgeBasesRetriever
 from langchain.chains import RetrievalQA
 
 from langchain.prompts import PromptTemplate
