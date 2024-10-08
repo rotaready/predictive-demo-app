@@ -87,4 +87,7 @@ def animate(ival):
 
 ani = animation.FuncAnimation(fig, animate, interval=50)
 
-mpf.show()
+mng = plt.get_current_fig_manager()
+mng.full_screen_toggle()
+
+plt.show() # or mpf.show() ?

@@ -15,10 +15,14 @@ from flask_migrate import Migrate
 from   flask_minify  import Minify
 from   sys import exit
 
+import subprocess
+
 from localStoragePy import localStoragePy
 
 from apps.config import config_dict
 from apps import create_app, db
+
+from chainlit.cli import run_chainlit
 
 from apps.analytics import quicksight_embed as qe
 from apps.analytics import bedrock_rag as rag
@@ -154,7 +158,6 @@ def start_streaming():
 
     print("streaming route started")
     # str_ex.main() # just stream
-    import subprocess
     subprocess.run(["python", "apps/streaming/cost-control-streaming.py"]) # *check* run in background
 
     return render_template('pages/streaming.html')
