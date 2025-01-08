@@ -29,14 +29,14 @@ async def main(REALM: str):
     host=os.environ['UAT_RDS_CLONE_HOST'],
     user=os.environ['UAT_RDS_CLONE_USER'],
     password=os.environ['UAT_RDS_CLONE_PASSWORD'],
-    database="rr_core"
+    database=f"rr_{REALM}"
   )
 
   await cl.Message(content=f"STEP 2 running cost control query...").send()
-  df_cc = pd.read_sql_query(cc.SQL_SCRIPT, params= (REALM,), con=conn)
+  df_cc = pd.read_sql_query(cc.SQL_SCRIPT, con=conn) # params= (REALM,), dropped for now as more reliable to connect to client DB than rr_core
 
   await cl.Message(content=f"STEP 3 running rota shift query...").send()
-  df_ro = pd.read_sql_query(ro.SQL_SCRIPT, params= (REALM,), con=conn)
+  df_ro = pd.read_sql_query(ro.SQL_SCRIPT, con=conn) # params= (REALM,), dropped for now as more reliable to connect to client DB than rr_core
 
   # export for pickup when creating Assistant
   df_cc.to_csv(f'cost_control_{REALM}.csv', index = False)
@@ -59,7 +59,7 @@ async def main(REALM: str):
   await cl.Message(content=f"STEP 4 Creating Azure OpenAI Assistant...").send()
 
   assistant = client.beta.assistants.create(
-    name = f"cost_control_{REALM}",   
+    name = f"{REALM}_agent",   
     model="Rotaready", # model deployment name.
     instructions="You are a multi-modal AI with access to revenue / cost and labour (clock in/out) data as shown in the contents of the attached files. \
                   Please review the contents of these files before answering and use these as your knowledge base to best respond to user queries. \

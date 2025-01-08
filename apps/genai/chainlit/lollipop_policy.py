@@ -27,23 +27,25 @@ def main(prompt: str):
         - who was JFK ?
         - who is the likely to win the world cup ?
 
+        e) a request to search or searching an existing agent
         or 
-        e) a question related to forecasting, models, training, inference, labour demand, clients, sites, data e.g.
+        f) a question related to forecasting, models, training, inference, labour demand, clients, sites, data e.g.
 
         - summarise the forecasts for me
         - what job errors are you seeing ?
         - what are the top 5 anomalies for client X
 
         For a) reply with 'create_agent' and if a specific client or realm name from this list:
-        'dishoom', 'brownsofbrockley' , 'maray', 'camino','brewdog','namco','signaturepubs',
-        'thehotelfolk','itison','warnerleisure','roseacre','preto','pizzapilgrims','nq64',
-        'temper','spaceandthyme','bonnieandwild','housecafes','mcmanuspubs','gusto' is mentioned, 
-        then add to the reply 'for client:' followed by the client name, 
+        'guestline', 'shr', 'avvio', 'shr search', 'avvio search', 'dishoom', 'brownsofbrockley', 
+        'maray', 'camino','brewdog','namco','signaturepubs', 'thehotelfolk','itison','warnerleisure',
+        'roseacre','preto','pizzapilgrims','nq64','temper','spaceandthyme','bonnieandwild','housecafes',
+        'mcmanuspubs','gusto' is mentioned, then add to the reply 'for client:' followed by the client name, 
         for b) reply with 'greeting', 
         for c) reply with 'my function',
-        for d) reply with 'general knowledge', 
+        for d) reply with 'general knowledge',
+        for e) reply with 'search',
         and for 
-        e) just reply with 'data' only, NOT 'data.'."""
+        f) just reply with 'data' only, NOT 'data.'."""
       },
       {
         "role": "user",
@@ -61,6 +63,6 @@ def main(prompt: str):
 
   deployment_name='Rotaready' #This will correspond to the custom name you chose for your deployment when you deployed a model. Use a gpt-35-turbo-instruct deployment. 
       
-  response = client.chat.completions.create(model=deployment_name, messages=lollipop_policy, max_tokens=50)
+  response = client.chat.completions.create(model=deployment_name, messages=lollipop_policy, temperature=0.01, max_tokens=50)
 
   return(response.choices[0].message.content)                                                                                   

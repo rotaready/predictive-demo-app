@@ -19,11 +19,10 @@ import chainlit as cl
 from chainlit.config import config
 from chainlit.element import Element
 
-import lollipop_policy as lp
-import create_assistant as cr_agent
-
-    
-
+import lollipop_policy as lp # agent to determine the type of question asked by the user
+import create_assistant as cr_agent # creating a NEW agent
+from assistant_direct import AssistantDirect # querying an existing agent
+from search_agent import SearchAgent # searching vector store attached as KBA for Search Agent
 
 import random
 
@@ -44,6 +43,7 @@ sync_openai_client = AzureOpenAI(
 
 # whisper model speech to text unsupported in Europe, so using my credits again bah *check*
 whisper_client = AsyncOpenAI(api_key=os.environ.get("CE_OPENAI_API_KEY"))
+
 
 class EventHandler(AsyncAssistantEventHandler):
 
@@ -160,6 +160,7 @@ async def start_chat():
     thread = await async_openai_client.beta.threads.create()
     # Store thread ID in user session for later use
     cl.user_session.set("thread_id", thread.id)
+    cl.user_session.set("changed_assistant", False)
     # await cl.Avatar(name=assistant.name, path="./public/logo.png").send()
     # await cl.Message(content=f"Hello, I'm {assistant.name}!", disable_feedback=True).send()
     await cl.Message(content=f"Hello, fire away!").send()
@@ -170,10 +171,11 @@ async def main(message: cl.Message):
 
     # data_context_qu = ['forecasting', 'models', 'training', 'inference', 'labour demand', 'clients', 'sites', 'data', 'revenue', 'cost', 'rota', 'plot', 'chart', 'graph', 'calculate']
     
-    check_lollipop = lp.main(cl.chat_context.to_openai()[-1]['content']) # determnine if about creating an agent, a data related question or something else
+    user_prompt = cl.chat_context.to_openai()[-1]['content']
+    check_lollipop = lp.main(user_prompt) # determnine if about creating an agent, a data related question or something else
 
     client_context = ['client', 'realm']
-    client_list = ['dishoom', 'brownsofbrockley' , 'maray', 'camino','brewdog','namco','signaturepubs',
+    client_list = ['guestline', 'shr', 'avvio', 'dishoom', 'brownsofbrockley' , 'maray', 'camino','brewdog','namco','signaturepubs',
         'thehotelfolk','itison','warnerleisure','roseacre','preto','pizzapilgrims','nq64',
         'temper','spaceandthyme','bonnieandwild','housecafes','mcmanuspubs','gusto']
     
@@ -198,14 +200,14 @@ async def main(message: cl.Message):
             text_answer = "please could you clarify the client or realm name for the new agent"
 
     # only do data routine below (to retrieve an existing assistant) if user is still on orchestator
-    if check_lollipop == 'data' and cl.user_session.get("assistant_id") == os.getenv("ACC_AZURE_OAI_AST_ORCHESTRATOR"): # assumed data related question *check* that non-image or data qus are answered earlier in the process as this part isnt invoked
+    elif (check_lollipop == 'data' or check_lollipop == 'search') and (cl.user_session.get("assistant_id") == os.getenv("ACC_AZURE_OAI_AST_ORCHESTRATOR")): # assumed data related question *check* that non-image or data qus are answered earlier in the process as this part isnt invoked
     # if not elements and any(word in user_input for word in data_context_qu): # assumed data related question *check* that non-image or data qus are answered earlier in the process as this part isnt invoked
         
         # first check if a specific client was mentioned, check it against the existing agent names
         # and switch the agent id to that assistant/agent
         # *check* inefficient probably - refactor
-        if any(word in cl.chat_context.to_openai()[-1]['content'] for word in client_list):
-            client_mention = next(s for s in client_list if s in cl.chat_context.to_openai()[-1]['content'].lower())
+        if any(word in user_prompt.lower() for word in client_list):
+            client_mention = next(s for s in client_list if s in user_prompt.lower())
         # loop back thru assistants from last one created
         for assistant_counter in range(len(sync_openai_client.beta.assistants.list().data)):
             # next assistant
@@ -215,77 +217,140 @@ async def main(message: cl.Message):
                 cl.user_session.set("changed_assistant", True)
                 cl.user_session.set("assistant_id", sync_openai_client.beta.assistants.list().data[assistant_counter].id)
                 assistant = sync_openai_client.beta.assistants.retrieve(cl.user_session.get("assistant_id"))
-                await cl.Message(content=f'switched to {client_mention} agent: {cl.user_session.get("assistant_id")}').send()
-                # Create a new thread (as looks like a thread cannot be shared across multiple assistants)
-                thread = await async_openai_client.beta.threads.create(tool_resources={
-                                                                        "code_interpreter": {"file_ids": assistant.tool_resources.code_interpreter.file_ids}},
-                                                                       )
-                # Store thread ID in user session for later use
-                cl.user_session.set("thread_id", thread.id)
+
+                if check_lollipop == 'data':
+                    await cl.Message(content=f'switched to {client_mention} agent: {cl.user_session.get("assistant_id")}').send()
+                    # Create a new thread (as looks like a thread cannot be shared across multiple assistants)
+                    thread = await async_openai_client.beta.threads.create(tool_resources={
+                                                                            "code_interpreter": {"file_ids": assistant.tool_resources.code_interpreter.file_ids}},
+                                                                        )
+                    # Store thread ID in user session for later use
+                    cl.user_session.set("thread_id", thread.id)
+
+
+                    # now go ahead and use assistants.run to provide a less verbose, more graphical focussed response on completion (rather the verbose stream method)
+                    await cl.Message(content=f"Bear with me while we query the data...").send()
+                    asd = AssistantDirect(cl.user_session.get("assistant_id"), sync_openai_client)
+                    await asd.persist_thread(user_prompt)
+                else: # i.e. search
+                    await cl.Message(content=f'switched to {client_mention} search agent: {cl.user_session.get("assistant_id")}').send()
+                    
+                    # Create a new thread (as looks like a thread cannot be shared across multiple assistants)
+                    thread = await async_openai_client.beta.threads.create(tool_resources={"file_search":{"vector_store_ids":assistant.tool_resources.file_search.vector_store_ids}})
+                    # Store thread ID in user session for later use
+                    cl.user_session.set("thread_id", thread.id)
+
+
+                    # now go ahead and use assistants.run to provide a less verbose, more graphical focussed response on completion (rather the verbose stream method)
+                    search = SearchAgent(cl.user_session.get("assistant_id"), sync_openai_client)
+                    await search.persist_thread(user_prompt)
+
                 break
         if not cl.user_session.get("changed_assistant"): # client mentioned in client_list not found in existing agents, so ask the user if you would like to create a new one
             await cl.Message(content=f"The client's AI assistant doesnt exist yet, would you like me to create one ?").send()
 
-    # else: # al other qus (non-data or data question on new/existing agent)
 
-    # only one assistant change allowed for now *check*
-    # changed assistant could be a newly created one or an existing one that has been retrieved
-    # if cl.user_session.get("changed_assistant"):
+    # continue conversation if not changed assistant (and run direct assistant)
+    # *check* refactor this whole function into 2 STAGES (1. agent handling and 2. dialogue hamdling) and 4 sub-functions: 1. create_agent, 2. switch agent 3. standard dialogue 4. follow-on dialogue (i.e. retaining context) ?
+    if not cl.user_session.get("changed_assistant"):
 
-    #     # config.ui.name = assistant.name
+        # else: # al other qus (non-data or data question on new/existing agent)
 
-    #     # Create a new thread if a new assistant
-    #     thread = await async_openai_client.beta.threads.create()
-    #     # Store thread ID in user session for later use
-    #     cl.user_session.set("thread_id", thread.id)
-    #     cl.user_session.set("changed_assistant", False) # set back to False, as we are supporting one change in assistant for now
+        # only one assistant change allowed for now *check*
+        # changed assistant could be a newly created one or an existing one that has been retrieved
+        # if cl.user_session.get("changed_assistant"):
 
-    # msg = cl.Message(author="You", content=user_input, elements=elements)
-    # await main(message=msg)
+        #     # config.ui.name = assistant.name
 
-    # provide a default answer for text2speech
-    # placeholder_responses = ["could you take a look at the above and let me know what you think",
-    #                          "does this answer your question ?",
-    #                          "check out above and let me know what you think",
-    #                          "let me know if this helps",
-    #                          "the response above hopefully provides some direction and guidance, but feel free to ask more questions",
-    #                          "is this what you were looking for ?"]
-    # text_answer = random.choice(placeholder_responses) 
+        #     # Create a new thread if a new assistant
+        #     thread = await async_openai_client.beta.threads.create()
+        #     # Store thread ID in user session for later use
+        #     cl.user_session.set("thread_id", thread.id)
+        #     cl.user_session.set("changed_assistant", False) # set back to False, as we are supporting one change in assistant for now
+
+        # msg = cl.Message(author="You", content=user_input, elements=elements)
+        # await main(message=msg)
+
+        # provide a default answer for text2speech
+        # placeholder_responses = ["could you take a look at the above and let me know what you think",
+        #                          "does this answer your question ?",
+        #                          "check out above and let me know what you think",
+        #                          "let me know if this helps",
+        #                          "the response above hopefully provides some direction and guidance, but feel free to ask more questions",
+        #                          "is this what you were looking for ?"]
+        # text_answer = random.choice(placeholder_responses) 
+
+        
+
+        # attachments = await process_files(message.elements)
+
+        thread_id = cl.user_session.get("thread_id")
+
+        # Add a Message to the Thread
+        
+        # i = 1
+        # # get the last user message *check* this will ignore any assistant updates in middle of conversation
+        # while cl.chat_context.to_openai()[-i]['role'] != 'user':
+        #     i+=1
+        await async_openai_client.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=user_prompt,
+            # attachments=attachments,
+        )
+        
+        assistant = sync_openai_client.beta.assistants.retrieve(cl.user_session.get("assistant_id"))
+        assistant_name = assistant.name # *check* refactor
+
+        if check_lollipop == 'greeting': # simple chat completion to a greeting
+            model = "Rotaready"
+            messages = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": user_prompt}],
+            }
+        ]
+            # *check* async didn't seem to work here, possibly as its a quick response and not needed
+            # although had to add the await after to get anything to render in chainlit UI
+            greet_response = sync_openai_client.chat.completions.create(
+                messages=messages, model=model, temperature=0.3
+            )
+            await cl.Message(content=greet_response.choices[0].message.content).send()
+
+        elif check_lollipop == 'search': 
+            search = SearchAgent(cl.user_session.get("assistant_id"), sync_openai_client)
+            await search.persist_thread(user_prompt)
+
+        else:  
+
+            # create and stream a run *check* previous streamed response replaced with persist_thread above
+            # to just present main findings in a less verbose manner / reduce chain of thoughht reasoning
+            async with async_openai_client.beta.threads.runs.stream(
+                thread_id=thread_id,
+                assistant_id=cl.user_session.get("assistant_id"),
+                event_handler=EventHandler(assistant_name=assistant_name),
+                # NB below istruction changed from below to avoid repeat analysis after already done, this stream should only be for follow-on questions 
+                # instructions="Please stick to the instructions given to the assistant and consider the historical context of the conversation when responding. If the assistant was created with uploaded files, please review their contents before answering and use them as your knowledge base. Keep your responses concise, not verbose, in markdown format and make use of the coolest, latest python visualisation libraries.",
+                instructions="Please review first the historical context of the conversation before responding. \
+                Keep your response very concise, only showing results. \
+                While you are thinking / processing the request keep the user informed with a suitable time-filler like 'processing your request...' \
+                Format your responses in markdown, and if the user has requested or implied they want a chart or visual in their request, \
+                please present back beautiful, uncluttered charts using the seaboard and/or plotly libraries were possible, showing histograms, \
+                scatter plots, box plots, correlation plots, confusion matrix, feature importances. \
+                Make sure x and y axis are always readable, simplifying the data if necessary to only show e.g. top 10, top 25 or top 100 datapoints.",
+                tools=[{"type":"code_interpreter"}]
+            ) as stream:
+                await stream.until_done()
 
     
+    elif 'create_agent' not in check_lollipop:
 
-    # attachments = await process_files(message.elements)
+        cl.user_session.set("changed_assistant", False) # reset to False
 
-    thread_id = cl.user_session.get("thread_id")
-
-    # Add a Message to the Thread
-    
-    # i = 1
-    # # get the last user message *check* this will ignore any assistant updates in middle of conversation
-    # while cl.chat_context.to_openai()[-i]['role'] != 'user':
-    #     i+=1
-    await async_openai_client.beta.threads.messages.create(
-        thread_id=thread_id,
-        role="user",
-        content=cl.chat_context.to_openai()[-1]['content'],
-        # attachments=attachments,
-    )
-    
-    assistant = sync_openai_client.beta.assistants.retrieve(cl.user_session.get("assistant_id"))
-    assistant_name = assistant.name # *check* refactor
-
-    # Create and Stream a Run
-    async with async_openai_client.beta.threads.runs.stream(
-        thread_id=thread_id,
-        assistant_id=cl.user_session.get("assistant_id"),
-        event_handler=EventHandler(assistant_name=assistant_name),
-        instructions="Please stick to the overarching instructions given when the assistant was created and consider the historical context of the conversation when responding. \
-        If the assistant was created with uploaded files, please review their contents before answering and use them as your knowledge base.",
-        tools=[{"type":"code_interpreter"}]
-    ) as stream:
-        await stream.until_done()
-
-    
+        # placeholder response after changing assistant (and run direct assistant) - 
+        # not in case of new agent creation or search request *check* refactor - needs a dialogue process map
+        # *check* do we really need this ??
+        if check_lollipop != 'search': await cl.Message(content=placeholder_responses()).send()
 
 
 def encode_image(image_path):
@@ -393,13 +458,7 @@ async def on_audio_end(elements: list[Element]):
         await main(message=transcription)
 
         # provide a default answer for text2speech
-        placeholder_responses = ["could you take a look at the above and let me know what you think",
-                                 "does this answer your question ?"
-                                 "check out above and let me know what you think",
-                                 "let me know if this helps",
-                                 "the response above hopefully provides some direction and guidance, but feel free to ask more questions",
-                                 "is this what you were looking for ?"]
-        text_answer = random.choice(placeholder_responses) 
+        text_answer = placeholder_responses()
 
 
     else: # image-related question
@@ -411,7 +470,19 @@ async def on_audio_end(elements: list[Element]):
 
     await text_to_speech(text_answer, audio_mime_type)
 
+def placeholder_responses():
 
+    '''placeholder responses to persist dialogue / retain context'''
+
+    placeholder_responses = ["could you take a look at the above and let me know what you think",
+                                 "does this answer your question ?",
+                                 "check out above and let me know what you think",
+                                 "let me know if this helps",
+                                 "the response above hopefully provides some direction and guidance, but feel free to ask more questions",
+                                 "is this what you were looking for ?"]
+        
+        
+    return random.choice(placeholder_responses) 
 
 if __name__ == "__main__":
     run_chainlit(__file__) # opens a web broswer with the chainlit chat UI and calls @cl.on_chat_start
