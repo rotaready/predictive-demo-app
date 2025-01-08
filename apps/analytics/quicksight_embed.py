@@ -5,8 +5,9 @@ import requests
 
 QSREGION = 'eu-west-1'
 AWS_ACCOUNT_ID =  '412738038163'
-DASHBOARD_ID = '2e385c5c-841a-4bd3-a28f-d8cdc0863c22' # OLD: '550ee793-d4ce-408d-865b-7b25937e0723' # sample dashboard: '24b067dc-a98a-4861-948c-d4304c93a2e4'
+DASHBOARD_ID = '31c814ac-57a8-4357-bcbd-4941ae2abfed' # OLD: '550ee793-d4ce-408d-865b-7b25937e0723' # sample dashboard: '24b067dc-a98a-4861-948c-d4304c93a2e4'
 QUICKSIGHT_USER_ARN = 'arn:aws:quicksight:us-east-1:412738038163:user/default/barry.walsh'
+
 
 def create_connection():
     try:
@@ -38,5 +39,8 @@ def getDashboardURL():
         return "Error generating embeddedURL: " + str(e)
     except Exception as er:
         print(er)
-    
+
+# debug
+# getDashboardURL()   
 #getDashboardURL(dashboard_id, "default")
+

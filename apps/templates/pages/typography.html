@@ -62,6 +62,7 @@
 
     } else {
       console.info( "This page is not reloaded");
+ 
     }
 
 </script> 
@@ -126,7 +127,8 @@
 <!-- Modal body -->
 <div class="modal-body" id="qs-container">
 <!-- Modal body.. -->
-  <iframe class="responsive-iframe" src="https://www.youtube.com/embed/tgbNymZ7vqY"></iframe> <!-- placeholder -->
+  <!-- <iframe class="responsive-iframe" src="https://www.youtube.com/embed/tgbNymZ7vqY"></iframe> placeholder -->
+  <iframe class="responsive-iframe" src="{{ session["qs_url"] }}"></iframe>
 </div>
 
 <!-- Modal footer -->
@@ -176,6 +178,13 @@
     // only enable button actions when webpage ready
     $(document).ready(function(){
 
+      // QuickSight dashboard handling
+      if (performance.navigation.type != performance.navigation.TYPE_RELOAD) 
+        { // cookie monster placeholder for QS dashboard
+          $('#qs-container').append($('<iframe class="responsive-iframe" src="https://www.youtube.com/embed/tgbNymZ7vqY"></iframe> <!-- placeholder -->'));
+        } else {
+          // do nothing 
+        }
 
       // FIRST: LLM handling when llm button pressed
       $("#llm_submit").on('click', function(e){
@@ -247,7 +256,7 @@
                                           document.getElementById("qs-load-msg").innerHTML = '';
 
                                           // $('#qs-container').append($('<?= file_get_contents("{{ session["qs_url"] }}"); ?>'));
-                                          $('#qs-container').append($('<iframe class="responsive-iframe" src={{ session["qs_url"] }}"></iframe>'));
+                                          // $('#qs-container').append($('<iframe class="responsive-iframe" src={{ session["qs_url"] }}"></iframe>')); *check* no longer rendering - throws error: Embedding failed because of invalid URL or authorization code. Both of these must be valid and the authorization code must not be expired for embedding to work. 
                                           // var src = $(this).attr('src').replace('https://www.youtube.com/embed/tgbNymZ7vqY','{{ session["qs_url"] }}'); 
                                           // $('iframe.responsive-iframe').attr('src', src);                                   
 
